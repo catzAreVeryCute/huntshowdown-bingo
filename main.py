@@ -1,3 +1,6 @@
+"""
+<Insert File Descriptions Here>
+"""
 from PIL import Image, ImageTk
 from os import walk
 import random
@@ -8,8 +11,8 @@ import math
 import tkinter.font as font
 
 WIDTH = 1004
-HEIGHT = 1200
-WINDOW_SIZE = "1004x1200"
+HEIGHT = 1070
+WINDOW_SIZE = "1004x1070"
 TITLE = "Hunt: Showdown Bingo"
 BG_COLOR = "black"
 
@@ -29,9 +32,11 @@ class Main(tk.Tk):
         # 2D array to keep track of which tiles are marked
         self.marked = [[False for x in range(5)] for y in range(5)] 
 
+        # Width and height of the bingo card; these dimensions are are arbitrary. The original card was too big.
         self.card_width = 1000
         self.card_height = 994
 
+        # Restrict the size of the GUI so we don't have resize issues
         self.minsize(WIDTH, HEIGHT)
         self.maxsize(WIDTH, HEIGHT)
 
@@ -63,18 +68,22 @@ class Main(tk.Tk):
         add_tiles_btn.grid(row=0, column=3, sticky="news")
         add_tiles_btn['font'] = BUTTON_FONT
 
-        self.card = Image.open("./assets/card.png") # The current bingo card as an Image object
-        self.card_copy = self.card.copy()           # A copy of the current bingo card. Needed for resizing 
-        self.card = self.card.resize((self.card_width, self.card_height))   # Resize bingo card according to the current window size
+        # The current bingo card as an Image object
+        self.card = Image.open("./assets/card.png") 
 
-        self.tk_img = ImageTk.PhotoImage(self.card) # A tk version of the image is needed to embed it in the GUI
-        # self.label1 = tk.Label(image=self.tk_img, width=1000, height=994, text="card")
-        # self.label1.image = self.tk_img
+        # A copy of the current bingo card. Needed for resizing 
+        # self.card_copy = self.card.copy()         
 
+        # Resize bingo card according to the current window size
+        self.card = self.card.resize((self.card_width, self.card_height))  
+
+        # A tk version of the image is needed to embed it in the GUI
+        self.tk_img = ImageTk.PhotoImage(self.card) 
+    
+        # Embed the image in a canvas, and make the canvas the same size as the bingo card
         self.canvas = tk.Canvas(self, width=self.card_width, height=self.card_height)
         self.canvas.grid(row=1, columnspan=4)
         self.canvas.create_image(0,0, image=self.tk_img, anchor='nw')
-        # self.canvas.bind('<Configure>', self._resize_image)
     
 
     def save_card(self):
@@ -84,6 +93,24 @@ class Main(tk.Tk):
         file = asksaveasfile(mode='wb', defaultextension=".png", filetypes=[("PNG file", "*.png")]) # opens a dialogue box
         if file:
             self.card.save(file) # saves the image
+
+
+    def add_tiles(self):
+        file = askopenfilename(defaultextension=".png", filetypes=[("PNG file", "*.png")]) # opens a dialogue box
+        if file:
+            try:
+                fname = file[file.rfind('/')+1:]
+                tile = Image.open(file, 'r')
+                tile.save(f'./assets/tiles/{fname}')
+                
+                tk.messagebox.showinfo("Success!", f"{fname} was successfully added.")
+            except Exception as e:
+                tk.messagebox.showinfo("Error", e)
+
+    
+    def clear_bingo_card(self):
+        self.canvas.delete("marker")
+        self.marked = [[False for x in range(5)] for y in range(5)] 
 
 
     def get_mouse_pos(self, event):
@@ -99,10 +126,9 @@ class Main(tk.Tk):
             self.mouse_x = event.x
             self.mouse_y = event.y
 
-            print(self.mouse_x, self.mouse_y)
             self.mark_card()
 
-          
+
     def mark_card(self):
         border_thickness = round((self.card_width * 0.10385) / 6)
         tile_width = round((self.card_width - (self.card_width * 0.10385)) / 5)
@@ -149,24 +175,6 @@ class Main(tk.Tk):
             self.canvas.create_polygon([x1, y2, x1, y1, (x1 + draw_width), (y1 + draw_width), (x1 + draw_width), (y2 - draw_width)], fill="blue", tags=(f"col{col}row{row}", "marker"))
         else:
             self.canvas.delete(f"col{col}row{row}")
-
-
-    def clear_bingo_card(self):
-        self.canvas.delete("marker")
-        self.marked = [[False for x in range(5)] for y in range(5)] 
-
-    def add_tiles(self):
-        file = askopenfilename(defaultextension=".png", filetypes=[("PNG file", "*.png")]) # opens a dialogue box
-        if file:
-            try:
-                fname = file[file.rfind('/')+1:]
-                tile = Image.open(file, 'r')
-                tile.save(f'./assets/tiles/{fname}')
-                
-                tk.messagebox.showinfo("Success!", f"{fname} was successfully added.")
-            except Exception as e:
-                tk.messagebox.showinfo("Error", e)
-                
 
 
     def get_new_bingo_card(self):
@@ -245,8 +253,6 @@ class Main(tk.Tk):
         self.marked = [[False for x in range(5)] for y in range(5)] 
 
 
-
-        
 if __name__ == "__main__":
     root = Main()
     root.mainloop()
