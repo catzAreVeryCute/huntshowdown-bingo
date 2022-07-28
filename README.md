@@ -49,23 +49,37 @@ If you have trouble with these types, you can contact me via Discord.
 <a name="usage"></a>
 ## Usage
 
-**Generating a Bingo Card**
+#### Generating a Bingo Card
 To generate a new bingo card, simply click the "New Card" button. 
 
-**Marking a Bingo Card**
+<br>
+
+#### Marking a Bingo Card
 Click on the tiles to mark and umark the card. 
 
-**Clearing the Bingo Card**
+<br>
+
+#### Clearing the Bingo Card
 Click the "Clear Card" button to get rid of all marks on the bingo card.
 
-**Saving the Bingo Card**
+<br>
+
+#### Saving the Bingo Card
 If you want to save your bingo card as a .png, you can click the "Save Card" button. Saving the card DOES NOT save the markings that you've made on the card; just the blank card is saved.
 
-**Adding Your Own Tiles**
+<br>
+
+#### Adding Your Own Tiles
 If you want to add custom tiles for the bingo card to process, you can use the "Add Tiles" button. Upon clicking the button, a dialogue box will pop up. Select your tile image and it'll automatically be added to your assets/tiles folder. If you're going to make custom tiles for the program, ensure that they are 549x546 (549 pixels wide, 546 pixels high) and that it's a .png file. The program assumes these dimensions, so if you add an image file that doesn't fit the expectation, weird stuff will happen. Don't let weird stuff happen. 
 
-**Removing Tiles**
+#### Removing Tiles
 If there's a particular tile that you don't want showing up on your card, you'll have to remove the image file from the `dist/assets/tiles` folder manually. 
+
+<br>
+
+<a name="comments"></a>
+## Comments 
+This'll be added later cause I'm lazy.
 
 <a name="builtwith"></a>
 ## Built With
@@ -81,3 +95,4 @@ All assets are the property of Crytek.
 Assets were created and edited by the goated gigachad Bwabcat using Clip Studio. 
 
 ## Contact 
+If you need to contact me, the maintainer of this repository for any reason, add me on my Discord: Kizie#5066
