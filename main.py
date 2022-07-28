@@ -3,30 +3,15 @@ from os import walk
 import random
 import tkinter as tk
 from tkinter.filedialog import asksaveasfile
+from tkinter.filedialog import askopenfilename
 import math
+import tkinter.font as font
 
-WINDOW_SIZE = "1600x1200"
+WIDTH = 1004
+HEIGHT = 1200
+WINDOW_SIZE = "1004x1200"
 TITLE = "Hunt: Showdown Bingo"
 BG_COLOR = "black"
-# class ResizingCanvas(tk.Canvas):
-#     def __init__(self,parent,**kwargs):
-#         tk.Canvas.__init__(self,parent,**kwargs)
-#         self.bind("<Configure>", self.on_resize)
-#         self.height = self.winfo_reqheight()
-#         self.width = self.winfo_reqwidth()
-
-#     def on_resize(self,event):
-#         # determine the ratio of old width/height to new width/height
-#         # wscale = float(event.width)/self.width
-#         # hscale = float(event.height)/self.height
-#         self.width = event.width
-#         self.height = event.height
-#         # resize the canvas 
-#         self.config(width=self.width, height=self.height)
-#         # # rescale all the objects tagged with the "all" tag
-#         # self.scale("all",0,0,wscale,hscale)
-        
-
 
 class Main(tk.Tk):
     def __init__(self, *args, **kwargs):
@@ -34,15 +19,21 @@ class Main(tk.Tk):
         # Need to call the tkinter constructor
         tk.Tk.__init__(self, *args, **kwargs)
 
+        # This needs to be defined IN the class; otherwise Tkinter shits itself
+        BUTTON_FONT = font.Font(size=18)
+
         # These variables track the x and y position of where the user clicks on the bingo card
         self.mouse_x = None
         self.mouse_y = None
 
+        # 2D array to keep track of which tiles are marked
         self.marked = [[False for x in range(5)] for y in range(5)] 
-        print(self.marked)
 
         self.card_width = 1000
         self.card_height = 994
+
+        self.minsize(WIDTH, HEIGHT)
+        self.maxsize(WIDTH, HEIGHT)
 
         # When mouse 1 (left click) is clicked, run the get_mouse_pos function
         self.bind("<Button 1>", self.get_mouse_pos)
@@ -52,12 +43,25 @@ class Main(tk.Tk):
         self.title(TITLE)        
         self.configure(bg=BG_COLOR) 
 
-        # Button to generate a new bingo card
-        new_card_btn = tk.Button(text="New Card", command=self.get_new_bingo_card).pack()
+        # Button to generate a new bingo card; sticky=nesw lets the button fill the entire grid
+        new_card_btn = tk.Button(text="New Card", height=2, command=self.get_new_bingo_card)
+        new_card_btn.grid(row=0, column=0, sticky="nesw")
+        new_card_btn['font'] = BUTTON_FONT
 
         # Button to save a bingo card
-        save_card_btn = tk.Button(text="Save Card", command=self.save_card).pack()
+        save_card_btn = tk.Button(text="Save Card", command=self.save_card)
+        save_card_btn.grid(row=0, column=1, sticky="nesw")
+        save_card_btn['font'] = BUTTON_FONT
 
+        # Button to clear the bingo card
+        clear_card_btn = tk.Button(text="Clear Card", command=self.clear_bingo_card)
+        clear_card_btn.grid(row=0, column=2, sticky="nesw")
+        clear_card_btn['font'] = BUTTON_FONT
+
+        # Button to add tiles to the program
+        add_tiles_btn = tk.Button(text="Add Tiles", command=self.add_tiles)
+        add_tiles_btn.grid(row=0, column=3, sticky="news")
+        add_tiles_btn['font'] = BUTTON_FONT
 
         self.card = Image.open("./assets/card.png") # The current bingo card as an Image object
         self.card_copy = self.card.copy()           # A copy of the current bingo card. Needed for resizing 
@@ -68,40 +72,10 @@ class Main(tk.Tk):
         # self.label1.image = self.tk_img
 
         self.canvas = tk.Canvas(self, width=self.card_width, height=self.card_height)
-        self.canvas.pack()
+        self.canvas.grid(row=1, columnspan=4)
         self.canvas.create_image(0,0, image=self.tk_img, anchor='nw')
-        self.canvas.bind('<Configure>', self._resize_image)
+        # self.canvas.bind('<Configure>', self._resize_image)
     
-       
-
-    def _resize_image(self, event):
-        """
-        Whenever the user resizes the GUI, we also need to resize the bingo card image that's
-        displayed. This function resizes the bingo card image and then redisplays it in the
-        GUI. The _resize_image function is bound to the label containing the bingo card image,
-        so whenever the label resizes, this function will execute. For simplicity, the width and
-        height of the label and the width and height of the bingo card image are the same.
-
-        When resizing the bingo card, we need to resize the original version of the image. If we keep
-        resizing something that's already been resized multiple times, we lose image quality. That's
-        why we resize the copy of the card instead of the card itself.
-
-        See: https://stackoverflow.com/questions/24061099/tkinter-resize-background-image-to-window-size
-        """
-        # print(event.width)
-        # print(self.card_width)
-        if (self.card_width != event.width or self.card_height != event.height):
-            self.card_width = event.width 
-            self.card_height = event.height
-
-            self.card = self.card_copy.resize((self.card_width, self.card_height)) # resize the bingo card
-
-            self.tk_img = ImageTk.PhotoImage(self.card)
-
-            # self.canvas.config(width=self.card_width - 4, height=self.card_height - 4)
-            self.canvas.create_image(0,0, image=self.tk_img, anchor='nw')
-
-            # print("Stuff is happening")  
 
     def save_card(self):
         """
@@ -129,7 +103,6 @@ class Main(tk.Tk):
             self.mark_card()
 
           
-         
     def mark_card(self):
         border_thickness = round((self.card_width * 0.10385) / 6)
         tile_width = round((self.card_width - (self.card_width * 0.10385)) / 5)
@@ -160,9 +133,6 @@ class Main(tk.Tk):
                 y = y - (tile_width + border_thickness)
                 row += 1
         
-        print("Clicked on column, ", col)
-        print("Clicked on column, ", row)
-
         self.marked[col][row] = not self.marked[col][row]
 
         draw_width = round(border_thickness / 2)
@@ -172,48 +142,31 @@ class Main(tk.Tk):
         x2 = (col * tile_width) + (col * border_thickness) + border_thickness + tile_width + (1 * col)
         y2 = (row * tile_height) + (row * border_thickness) + border_thickness + tile_height + (1 * row)
 
-        print(x1, y1, x2, y2)
         if (self.marked[col][row]):
-            self.canvas.create_polygon([x1, y1, x2, y1, (x2 - draw_width), (y1 + draw_width), (x1 + draw_width), (y1 + draw_width)], fill="blue")
-            self.canvas.create_polygon([x2, y1, x2, y2, (x2 - draw_width), (y2 - draw_width), (x2 - draw_width), (y1 + draw_width)], fill ="blue")
-            self.canvas.create_polygon([x2, y2, x1, y2, (x1 + draw_width), (y2 - draw_width), (x2 - draw_width), (y2 - draw_width)], fill="blue")
-            self.canvas.create_polygon([x1, y2, x1, y1, (x1 + draw_width), (y1 + draw_width), (x1 + draw_width), (y2 - draw_width)], fill="blue")
+            self.canvas.create_polygon([x1, y1, x2, y1, (x2 - draw_width), (y1 + draw_width), (x1 + draw_width), (y1 + draw_width)], fill="blue", tags=(f"col{col}row{row}", "marker"))
+            self.canvas.create_polygon([x2, y1, x2, y2, (x2 - draw_width), (y2 - draw_width), (x2 - draw_width), (y1 + draw_width)], fill ="blue", tags=(f"col{col}row{row}", "marker"))
+            self.canvas.create_polygon([x2, y2, x1, y2, (x1 + draw_width), (y2 - draw_width), (x2 - draw_width), (y2 - draw_width)], fill="blue", tags=(f"col{col}row{row}", "marker"))
+            self.canvas.create_polygon([x1, y2, x1, y1, (x1 + draw_width), (y1 + draw_width), (x1 + draw_width), (y2 - draw_width)], fill="blue", tags=(f"col{col}row{row}", "marker"))
         else:
-            pass
-
-    
+            self.canvas.delete(f"col{col}row{row}")
 
 
-    #     # In the 3062x3043 version of the bingo card, each tile is 549x546 and the purple borders are 53 pixels thick
-    #     tile_width = 549
-    #     tile_height = 546
-    #     border_thickness = 53
+    def clear_bingo_card(self):
+        self.canvas.delete("marker")
+        self.marked = [[False for x in range(5)] for y in range(5)] 
 
-    #     # x and y coordinates on the bingo card
-    #     x = 53
-    #     y = 53
-
-    #     # row and column on the bingo card
-    #     row = 0
-    #     col = 0
-
-    #     while(row < 5):
-
-    #         # If row = 2 and col = 2, then we're on the freespace, so we don't need to place a tile
-    #         if (row != 2 or col != 2):
-
-
-    #         # Increment the x value to move to the next tile in the bingo card
-    #         x += tile_width + border_thickness 
-
-    #         # We only increment the y value whenever we get to the last column in the bingo card
-    #         if (col == 4):
-    #             col = 0
-    #             row += 1
-    #             x = 53
-    #             y += tile_height + border_thickness
-    #         else:
-    #             col += 1
+    def add_tiles(self):
+        file = askopenfilename(defaultextension=".png", filetypes=[("PNG file", "*.png")]) # opens a dialogue box
+        if file:
+            try:
+                fname = file[file.rfind('/')+1:]
+                tile = Image.open(file, 'r')
+                tile.save(f'./assets/tiles/{fname}')
+                
+                tk.messagebox.showinfo("Success!", f"{fname} was successfully added.")
+            except Exception as e:
+                tk.messagebox.showinfo("Error", e)
+                
 
 
     def get_new_bingo_card(self):
@@ -289,6 +242,8 @@ class Main(tk.Tk):
         self.tk_img = ImageTk.PhotoImage(resized_card)
 
         self.canvas.create_image(0,0, image=self.tk_img, anchor='nw')
+        self.marked = [[False for x in range(5)] for y in range(5)] 
+
 
 
         
