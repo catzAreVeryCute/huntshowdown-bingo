@@ -10,28 +10,52 @@ from tkinter.filedialog import askopenfilename
 import math
 import tkinter.font as font
 
+# Default window size
 WIDTH = 1004
 HEIGHT = 1080
-WINDOW_SIZE = "1004x1080"
+
+# Title of application
 TITLE = "Hunt: Showdown Bingo"
+
+# Background color of application
 BG_COLOR = "white"
+
+# Color of marker placed on bingo card
 MARKER_COLOR = "yellow" 
+
+# Color of marker when it's involved in a bingo
 BINGO_COLOR = "red"
 
+"""
+Asks the user to select a window size when the application launches.
+
+In the 500x500, 750x750, and 1500x1500 window size options, the bingo markers
+are off by a few pixels. 
+
+This should be in its own file, but creating exectuables when multiple python
+files are involved is a pain in the ass, so we'll keep everything in one file.
+"""
 class SelectWindowSizeScreen(tk.Tk):
     def __init__(self, *args, **kwargs):
+
         # Need to call the tkinter constructor
         tk.Tk.__init__(self, *args, **kwargs)
+
+        # Set window size and title
         self.geometry("300x250") 
         self.title(TITLE)      
-        LABEL_FONT = font.Font(size=16)
-        OTHER_FONT = font.Font(size=12)
+
+        LABEL_FONT = font.Font(size=16) # Font for labels
+        OTHER_FONT = font.Font(size=12) # Font for everything else
   
         label = tk.Label(text="Select a window size")
         label.pack()
         label['font'] = LABEL_FONT
 
+        # Used to keep track of which window size the user has selected
         self.var = tk.IntVar(None, 1000)
+
+        # Radio buttons for the different window sizes
         r1 = tk.Radiobutton(text="500x500", variable=self.var, value=500)
         r1.pack()
         r1['font'] = OTHER_FONT
@@ -52,19 +76,30 @@ class SelectWindowSizeScreen(tk.Tk):
         r5.pack()
         r5['font'] = OTHER_FONT
 
+        # An okay button. Executes the set window size func when clicked
         btn = tk.Button(text="Okay", height=2, command=self.set_window_size)
         btn.pack()
         btn['font'] = OTHER_FONT
 
     def set_window_size(self):
+        """
+        Width and height of the application are set and then the window is
+        destroyed
+        """
         global WIDTH, HEIGHT
+
+        # The actual application window itself needs to be bigger than what the user
+        # selected. For example, if 1000x1000 is selected, the bingo card will be
+        # 1000x1000, but the application itself will need to be slightly larger
         WIDTH = self.var.get() + 4
         HEIGHT = self.var.get() + 80
+
         self.destroy()
 
 
-
-
+"""
+The main bingo application
+"""
 class Main(tk.Tk):
     def __init__(self, *args, **kwargs):
 
@@ -81,7 +116,7 @@ class Main(tk.Tk):
         # 2D array to keep track of which tiles are marked
         self.marked = [[False for x in range(5)] for y in range(5)] 
 
-        # Width and height of the bingo card; these dimensions are are arbitrary. The original card was too big.
+        # Width and height of the bingo card
         self.card_width = WIDTH - 4
         self.card_height = HEIGHT - 80
 
@@ -90,9 +125,6 @@ class Main(tk.Tk):
         self.tile_width = (self.card_width * (5 / 6)) / 5
         self.tile_height = self.tile_width
 
-        # print("Border thickness is", self.border_thickness)
-        # print("Tile width is", self.tile_width)
-
         # Restrict the size of the GUI so we don't have resize issues
         self.minsize(WIDTH, HEIGHT)
         self.maxsize(WIDTH, HEIGHT)
@@ -100,8 +132,7 @@ class Main(tk.Tk):
         # When mouse 1 (left click) is clicked, run the clicked_on_card function
         self.bind("<Button 1>", self.clicked_on_card)
 
-        # Sets window size and title
-        # self.geometry(WINDOW_SIZE) 
+        # Set title, background color, etc.
         self.title(TITLE)        
         self.configure(bg=BG_COLOR) 
 
@@ -126,7 +157,7 @@ class Main(tk.Tk):
         add_tiles_btn['font'] = BUTTON_FONT
 
         # The current bingo card as an Image object
-        self.card = Image.open("./assets/NEWEST_Template.png")        
+        self.card = Image.open("./assets/card.png")        
 
         # Resize bingo card according to the current window size
         self.card = self.card.resize((self.card_width, self.card_height))  
@@ -135,6 +166,8 @@ class Main(tk.Tk):
         self.tk_img = ImageTk.PhotoImage(self.card) 
     
         # Embed the image in a canvas, and make the canvas the same size as the bingo card
+        # Note: The canvas will automatically make itself a few pixels larger in this case.
+        # That's partially why we set the window size larger than the card size
         self.canvas = tk.Canvas(self, width=self.card_width, height=self.card_height)
         self.canvas.grid(row=1, columnspan=4)
         self.canvas.create_image(0,0, image=self.tk_img, anchor='nw')
@@ -168,6 +201,11 @@ class Main(tk.Tk):
 
 
     def clicked_on_card(self, event):
+        """
+        When the user left clicks, we call set_mouse_pos to determine
+        the (x, y) coordinates of the click location. If the user clicked on the
+        canvas (ie, the bingo card), we call the mark_card function to mark it
+        """
         self.set_mouse_pos(event)
 
         if (isinstance(event.widget, tk.Canvas)):
@@ -179,15 +217,15 @@ class Main(tk.Tk):
         If the bingo card is clicked on, we determine where the card was clicked on in x and y pixel coordinates. 
         """
 
-        # this variable is the widget that was clicked on
+        # This variable is the widget that was clicked on
         caller = event.widget
 
         # Only set mouse_x and mouse_y if the widget clicked on is the label holding the bingo card image
+        # This is redundant but whatever
         if (isinstance(caller, tk.Canvas)):
             self.mouse_x = event.x
             self.mouse_y = event.y
 
-            print(self.mouse_x, self.mouse_y)
 
         
     def draw(self, col, row, color):
@@ -196,18 +234,22 @@ class Main(tk.Tk):
         # x2 is the x coordinate for the right side of the tile box
         # y1 is the y coordinate for the top of the tile box
         # y2 is the y coordinate for the bottom of the tile box
-        # (1*col) + 1 and (1*row) + 1 are just there to account for error
         x1 = math.floor((col * self.tile_width) + (col * self.border_thickness) + self.border_thickness)
         y1 = math.floor((row * self.tile_height) + (row * self.border_thickness) + self.border_thickness)
-        x2 = (col * self.tile_width) + (col * self.border_thickness) + self.border_thickness + self.tile_width #- (1 * col) + 1
-        y2 = (row * self.tile_height) + (row * self.border_thickness) + self.border_thickness + self.tile_height #- (1 * row) + 1
+        x2 = (col * self.tile_width) + (col * self.border_thickness) + self.border_thickness + self.tile_width 
+        y2 = (row * self.tile_height) + (row * self.border_thickness) + self.border_thickness + self.tile_height 
 
+        # If the tile is to be marked, we draw on the canvas. 
+        # Else we'll remove the bingo marker
         if (self.marked[col][row]):
 
             # Draw width is the width of the bingo marker
             # When drawing, we need to move the drawing up/down and left/right by an offset
             draw_width = self.border_thickness / 2
             offset = draw_width / 2
+
+            # Note: A bunch of geometry was done to determine where exactly we needed to draw
+            # things. 
 
             ### draws the square
             self.canvas.create_line(x1, y1+offset, x2, y1+offset, fill=color, width=draw_width, tags=(f"col{col}row{row}", "marker"))
@@ -233,7 +275,6 @@ class Main(tk.Tk):
             midpoint_x = (x2 + x1) / 2
             midpoint_y = (y2 + y1) / 2
 
-            #
             mid_width = (draw_width * math.sqrt(2)) / 2
 
             # Height of the inner triangle
@@ -280,8 +321,12 @@ class Main(tk.Tk):
             self.canvas.delete(f"col{col}row{row}")
 
     
-
     def check_for_bingo(self, col, row):
+        """
+        Checks if the currently marked tile causes a bingo.
+        If so, all tiles involved in the bingo are removed and
+        redrawn using the bingo color.
+        """
         row_ = [row_[row] for row_ in self.marked]
         col_ = self.marked[col]
 
@@ -327,25 +372,27 @@ class Main(tk.Tk):
 
 
     def undo_bingo(self, col, row):
-        row_ = [row_[row] for row_ in self.marked]
-        col_ = self.marked[col]
-
-        """Two issues. First, need to check that the column/row has at least 
-        4 other marked tiles before we change them back to yellow. if not leave em
-        
-        Second, we need to make sure we aren't undoing a colored bingo from another
-        row / col. So we need to check that as well"""
-
-        diagonal1 = []
-        diagonal2 = []
+        """
+        Checks if the tile that we're unmarking undoes any bingos. 
+        If it does, we remove those tiles and redraw them using the 
+        regular marker color.
+        """
+      
+        diagonal1 = [] # Top left to bottom right
+        diagonal2 = [] # Bottom left to top right
         [diagonal1.append(self.marked[i][4 - i]) for i in range(5)]
         [diagonal2.append(self.marked[i][i]) for i in range(5)]
 
-        # Undoing a column bingo # TODO MAKE SURE WE ARENT FUCKING UP DIAGONAL 
+        # Checking if we need to undo a column bingo 
         for r in range(0, 5):
 
+            # Grab the row that the current tile is involved in
             row_ = [row_[r] for row_ in self.marked]
+
+            # Check if the tile is marked and that it isn't involved in a bingo in row_
             if (self.marked[col][r] and not all(row_)):
+
+                # Check that the tile isn't involved in a diagonal bingo
                 if (r == (4 - col)) and all(diagonal1):
                     continue
                 if (r == col and all(diagonal2)):
@@ -354,11 +401,16 @@ class Main(tk.Tk):
                 self.canvas.delete(f"col{col}row{r}")
                 self.draw(col, r, MARKER_COLOR)
         
-        # Undoing a row bingo
+        # Checking if we need to undo a row bingo
         for c in range(0, 5):
 
+            # Grab the column that the current tile is involved in
             col_ = self.marked[c]
+
+            # Check if the tile is marked and that it isn't involved in a bingo in col_
             if (self.marked[c][row] and not all(col_)):
+
+                # Check that the tile isn't involved in a diagonal bingo
                 if (c == (4 - row)) and all(diagonal1):
                     continue
                 if (c == row and all(diagonal2)):
@@ -367,25 +419,47 @@ class Main(tk.Tk):
                 self.draw(c, row, MARKER_COLOR)
 
         # Undoing a diagonal bingo (diagonal2); top left to bottom right
-        # Only need to check this if column and row of tile are the same
+        # Only need to check this if column and row of the removed tile are the same
         if (col == row):
             for i in range(5):
+
+                # Grab row and column that the current tile is involved in
+                # We need to make sure we aren't undoing column and row bingos
+                # if they exist
                 col_ = self.marked[i]
                 row_ = [row_[i] for row_ in self.marked]
+
+                # Check that the tile is marked
+                # Check that it isn't involved in a row bingo
+                # Check that it isn't involved in a column bingo
                 if (self.marked[i][i] and not all(row_) and not all(col_)):
+
+                    # Check that it isn't involved in the other diagonal
                     if (i == 2 and all(diagonal1)):
                         continue
+
                     self.canvas.delete(f"col{i}row{i}")
                     self.draw(i, i, MARKER_COLOR)
 
         # Undoing a diagonal bingo (diagonal1); bottom left to top right
         if (row + col == 4):
             for i in range(5):
+
+                # Grab row and column that the current tile is involved in
+                # We need to make sure we aren't undoing column and row bingos
+                # if they exist
                 col_ = self.marked[i]
                 row_ = [row_[4 - i] for row_ in self.marked]
+
+                # Check that the tile is marked
+                # Check that it isn't involved in a row bingo
+                # Check that it isn't involved in a column bingo
                 if (self.marked[i][4 - i] and not all(row_) and not all(col_)):
+
+                    # Check that it isn't involved in the other diagonal
                     if (i == 2 and all(diagonal2)):
                         continue
+
                     self.canvas.delete(f"col{i}row{4 - i}")
                     self.draw(i, 4 - i, MARKER_COLOR)
 
@@ -417,10 +491,11 @@ class Main(tk.Tk):
         self.marked[col][row] = not self.marked[col][row]
 
         # If we're marking a tile, we need to draw on the card and check for a bingo
-        # If we're unmarking a tile, we need to remove what we drew and check to see if we undid a bingo
         if (self.marked[col][row]):
             self.draw(col, row, MARKER_COLOR)
             self.check_for_bingo(col, row)
+
+        # If we're unmarking a tile, we need to remove what we drew and check to see if we undid a bingo
         else:
             self.draw(col, row, MARKER_COLOR)
             self.undo_bingo(col, row)
@@ -460,7 +535,7 @@ class Main(tk.Tk):
         i = 0
 
         # open the blank bingo card using Pillow
-        card = Image.open('./assets/NEWEST_Template.png', 'r')
+        card = Image.open('./assets/card.png', 'r')
 
         while(row < 5):
 
@@ -503,7 +578,6 @@ class Main(tk.Tk):
 
 
 if __name__ == "__main__":
-
     select_win_size = SelectWindowSizeScreen()
     select_win_size.mainloop()
     root = Main()
