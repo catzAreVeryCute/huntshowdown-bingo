@@ -66,20 +66,25 @@ class Main(tk.Tk):
         add_tiles_btn.grid(row=0, column=3, sticky="news")
         add_tiles_btn['font'] = large_button_font
 
+        # Canvas
+        self.bingo_cards = []
+        self.bingo_cards.append(bingo_card.BingoCard(self.card_width, self.card_height, self))
+        self.bingo_cards[0].show_card()
+
         first = tk.Button(text="1", height=2, command=lambda: self.swap_cards(0))
-        first.grid(row=1, column=0, sticky="news")
+        first.grid(row=2, column=0, sticky="news")
         first.config(relief=tk.SUNKEN)
         first['font'] = self.small_button_font
 
         self.bingo_buttons = [first]
 
         self.add_another_card_btn = tk.Button(text="+", command=self.add_another_card)
-        self.add_another_card_btn.grid(row=1, column=1, sticky="news")
+        self.add_another_card_btn.grid(row=2, column=1, sticky="news")
         self.add_another_card_btn['font'] = self.small_button_font
 
-        self.bingo_cards = []
-        self.bingo_cards.append(bingo_card.BingoCard(self.card_width, self.card_height, self))
-        self.bingo_cards[0].show_card()
+        # self.bingo_cards = []
+        # self.bingo_cards.append(bingo_card.BingoCard(self.card_width, self.card_height, self))
+        # self.bingo_cards[0].show_card()
 
         self.num_cards = 1
         self.current_card_id = 0
@@ -95,11 +100,11 @@ class Main(tk.Tk):
         id_ = self.num_cards - 1
 
         new_button = tk.Button(text=f"{self.num_cards}", command=lambda: self.swap_cards(id_))
-        new_button.grid(row=1, column=self.num_cards - 1, sticky="news")
+        new_button.grid(row=2, column=self.num_cards - 1, sticky="news")
         new_button['font'] = self.small_button_font
         self.bingo_buttons.append(new_button)
 
-        self.add_another_card_btn.grid(row=1, column=self.num_cards, sticky="news")
+        self.add_another_card_btn.grid(row=2, column=self.num_cards, sticky="news")
 
         self.bingo_cards.append(bingo_card.BingoCard(self.card_width, self.card_height, self))
 

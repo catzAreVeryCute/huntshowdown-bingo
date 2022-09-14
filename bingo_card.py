@@ -47,7 +47,7 @@ class BingoCard():
 
 
     def show_card(self):
-        self.canvas.grid(row=2, columnspan=4)
+        self.canvas.grid(row=1, columnspan=4)
       
 
     def save_card(self):
@@ -65,6 +65,10 @@ class BingoCard():
 
 
     def get_new_bingo_card(self):
+
+        msg_box = tk.messagebox.askquestion ('', 'Create a new card?')
+        if msg_box == 'no':
+            return
 
         duplicates = False
         msg_box = tk.messagebox.askquestion ('', 'Allow duplicate tiles in the bingo card?')
